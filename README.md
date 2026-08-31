@@ -117,7 +117,7 @@ We welcome contributions from developers, emergency responders, and domain exper
 Given the critical nature of emergency response software, all contributions undergo thorough review to ensure reliability and safety in life-saving operations.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU Affero General Public License v3.0 — see the [LICENSE](LICENSE) file for details.
 
 ## Support
 For support related to emergency response operations:
