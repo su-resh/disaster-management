@@ -164,7 +164,7 @@ export default function EmergenciesPage() {
       if (error) throw error;
 
       // Apply filters
-      let filtered = data;
+      let filtered = (data || []) as unknown as EmergencyRequest[];
       if (filters.status.length > 0) {
         filtered = filtered.filter(e => filters.status.includes(e.status));
       }

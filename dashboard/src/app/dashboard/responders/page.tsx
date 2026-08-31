@@ -58,7 +58,7 @@ export default function RespondersPage() {
         .order('status', { ascending: true });
 
       if (error) throw error;
-      setResponders(data || []);
+      setResponders((data || []) as unknown as Responder[]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
       console.error('Error fetching responders:', errorMessage);

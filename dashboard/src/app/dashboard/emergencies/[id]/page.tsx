@@ -136,7 +136,7 @@ export default function EmergencyDetailPage() {
           .single();
 
         if (error) throw error;
-        setEmergency(data);
+        setEmergency(data as unknown as EmergencyRequest);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
         console.error('Error fetching emergency:', errorMessage);
@@ -185,7 +185,7 @@ export default function EmergencyDetailPage() {
         .single();
 
       if (error) throw error;
-      setEmergency(data);
+      setEmergency(data as unknown as EmergencyRequest);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
       console.error('Error refetching emergency:', errorMessage);
@@ -330,7 +330,13 @@ export default function EmergencyDetailPage() {
         .eq('status', 'AVAILABLE');
 
       if (error) throw error;
-      setResponders(data || []);
+      setResponders((data || []) as unknown as Array<{
+        id: string;
+        status: string;
+        skills: string[] | null;
+        vehicle_type: string | null;
+        profiles: { full_name: string | null; phone: string | null };
+      }>);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
       console.error('Error fetching responders:', errorMessage);
@@ -353,7 +359,12 @@ export default function EmergencyDetailPage() {
         .maybeSingle();
 
       if (error) throw error;
-      setCurrentAssignment(data);
+      setCurrentAssignment(data as unknown as {
+        id: string;
+        responder_id: string;
+        status: string;
+        profiles: { full_name: string | null; phone: string | null };
+      } | null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
       console.error('Error fetching current assignment:', errorMessage);
