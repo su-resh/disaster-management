@@ -1,77 +1,130 @@
-# Disaster Response Platform - Phase 0 Foundation
+# Rescue Platform
 
-This repository contains the Phase 0 foundation implementation of the disaster response platform as specified in the plan.md document.
+**Emergency Response & Disaster Coordination Platform**
 
-## What's Included
+A real-time dashboard for emergency response teams to coordinate disaster operations, track emergency requests, and manage rescue efforts during crises.
 
-### 1. Supabase Setup (`supabase/` directory)
-- **Migration files** for three lookup tables:
-  - `disaster_types` (flood, landslide, earthquake, fire, storm, avalanche, accident, other)
-  - `severity_levels` (critical rank 1, high rank 2, medium rank 3, low rank 4)
-  - `resource_types` (water, food, medicine, tents, blankets, clothes, first_aid, flashlights, batteries, rescue_equipment, fuel, other with sensible units)
-- **Seed data file** (`seed.sql`) with initial data for all lookup tables
-- **Profiles table migration** with:
-  - Proper schema (id, full_name, phone, role, created_at, is_active)
-  - Role constraints (citizen, responder, coordinator, inventory_manager, admin)
-  - RLS policies allowing users to read/update their own data only
-  - Admin-only policies for write operations on lookup tables
-  - Postgres trigger to auto-create profiles on auth.user creation
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Environment Variables](#environment-variables)
+- [Usage](#usage)
+- [Documentation](#documentation)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
 
-### 2. Next.js Dashboard (`dashboard/` directory)
-- **Next.js 13+ App Router** with TypeScript and Tailwind CSS
-- **Supabase client setup** following @supabase/ssr pattern
-- **Authentication flow**:
-  - `/login` page with phone OTP sign-in (request OTP → verify OTP)
-  - `/dashboard` protected route showing user info
-  - Automatic redirection based on auth status
-- **User info display**: "Logged in as {full_name or phone}, role: {role}"
+## Overview
+The Rescue Platform is a specialized dashboard designed for emergency coordinators and disaster response teams. It provides real-time visibility into emergency situations, enabling faster decision-making and more effective coordination of rescue operations during disasters, humanitarian crises, and emergency scenarios.
 
-### 3. Flutter Mobile App (`mobile/` directory)
-- **Flutter app** with supabase_flutter integration
-- **Authentication flow**:
-  - Login screen with phone OTP request and verification
-  - Home screen showing logged-in user info
-- **User info display**: "Logged in as {full_name or phone}, role: {role}"
+Built with Next.js and Supabase, the platform combines interactive mapping, real-time data synchronization, and intuitive emergency tracking to help response teams save lives when every second counts.
 
-## Setup Instructions
+## Key Features
+- 🆘 **Real-Time Emergency Tracking**: Live map view of active emergencies with color-coded severity indicators
+- 📍 **Geospatial Awareness**: Interactive maps showing exact emergency locations with detailed popups
+- 🚨 **Status & Severity Management**: Track emergency progression through statuses (NEW → VERIFIED → ASSIGNED → RESPONDER_ON_WAY → RESCUING → RESCUED) and severity levels (Critical, High, Medium, Low)
+- 👥 **Impact Assessment**: Monitor affected populations, injury counts, and special needs requirements
+- 📱 **Responsive Design**: Accessible on desktop and tablet devices for field and command center use
+- ⚡ **Instant Updates**: Real-time synchronization via Supabase Realtime for all connected clients
+- 🔒 **Secure Authentication**: Protected access for authorized emergency personnel only
+- 💬 **Detailed Emergency Info**: Complete emergency descriptions, contact information, location details, and disaster type classification
 
-### Supabase
-1. Copy the migration files from `supabase/migrations/` to your Supabase project
-2. Apply the migrations in order:
-   - 20260830000001_create_disaster_types_table.sql
-   - 20260830000002_create_severity_levels_table.sql
-   - 20260830000003_create_resource_types_table.sql
-   - 20260830000004_create_profiles_table.sql
-3. Run the seed.sql file to insert initial lookup data
+## Architecture
+The system follows a modern web architecture optimized for emergency response scenarios:
+- **Frontend**: Next.js 16+ with React 19 for responsive, real-time UI
+- **Backend**: Supabase providing PostgreSQL database, authentication, and real-time subscriptions
+- **Mapping**: MapLibre GL for interactive, offline-capable emergency maps
+- **State Management**: React hooks combined with Supabase real-time subscriptions
+- **Security**: Row-level security (RLS) in Supabase ensuring data protection
 
-### Next.js Dashboard
-1. Navigate to `dashboard/` directory
-2. Install dependencies: `npm install`
-3. Create `.env.local` file with your Supabase credentials:
+For detailed architecture diagrams and technical explanations, see [docs/architecture.md](./docs/architecture.md).
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v20+)
+- npm or yarn
+- Supabase account
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+
+### Installation
+1. Clone the repository
+2. Install dependencies for the dashboard:
+   ```bash
+   cd dashboard
+   npm install
    ```
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+3. Install root dependencies (if any):
+   ```bash
+   npm install
    ```
-4. Run the development server: `npm run dev`
 
-### Flutter Mobile App
-1. Navigate to `mobile/` directory
-2. Get dependencies: `flutter pub get`
-3. Update the Supabase credentials in `lib/main.dart`
-4. Run the app: `flutter run`
+### Environment Variables
+Create a `.env.local` file in the `dashboard` directory with the following variables:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+You can find these values in your Supabase project settings under **API** > **Project API keys**.
 
-## Security Implementation
-- Row Level Security (RLS) enabled on all tables from the start
-- Policies follow the principle of least privilege
-- Phone-based authentication as primary method
-- Role-based access control enforced at the database level
-- No client-side security bypass possible
+## Usage
+### Development
+Start the development server:
+```bash
+cd dashboard
+npm run dev
+```
+The application will be available at [http://localhost:3000](http://localhost:3000).
 
-## Next Steps (Phase 1)
-After verifying the Phase 0 foundation with test accounts, implement:
-- Emergency request creation and management
-- Responder assignment and status updates
-- Resource inventory management
-- Resource request workflow
-- Coordinator dashboard with real-time updates
-- Basic offline handling
+### Building for Production
+```bash
+cd dashboard
+npm run build
+npm run start
+```
+
+### Using the Platform
+1. **Login** with authorized emergency responder credentials
+2. **View Active Emergencies** on the dashboard - emergencies appear as color-coded markers on the map
+3. **Filter & Sort** by status (NEW, VERIFIED, ASSIGNED, etc.) and severity (Critical, High, Medium, Low)
+4. **Click on Markers** or list items to view detailed emergency information
+5. **Monitor Real-Time Updates** as new emergencies are reported and situations evolve
+6. **Coordinate Response** by assigning teams, tracking progress, and updating statuses
+
+## Documentation
+Comprehensive documentation is available in the `docs/` directory:
+- [Architecture Overview](./docs/architecture.md) - System design and components
+- [Development Guide](./docs/development.md) - Setup, coding standards, and workflows
+- [Database Schema](./docs/database.md) - Tables, relationships, and constraints (emergency_requests, severity_levels, disaster_types)
+- [Realtime Implementation](./docs/realtime.md) - Real-time features and subscriptions for live updates
+- [Authentication Flow](./docs/authentication.md) - User authentication and role-based access control
+- [Deployment Guide](./docs/deployment.md) - Deployment environments and CI/CD pipelines
+- [Security Model](./docs/security.md) - Security practices, data protection, and compliance
+- [Contributing Guidelines](./docs/contributing.md) - How to contribute to the project
+- [Project Roadmap](./docs/roadmap.md) - Future feature prioritization for emergency response enhancement
+
+## Deployment
+The application can be deployed to various platforms including Vercel, Netlify, or traditional VPS providers. See [deployment guide](./docs/deployment.md) for detailed instructions on deploying emergency response infrastructure.
+
+## Contributing
+We welcome contributions from developers, emergency responders, and domain experts! Please read our [contributing guidelines](./docs/contributing.md) for details on our code of conduct, pull request process, and development setup.
+
+Given the critical nature of emergency response software, all contributions undergo thorough review to ensure reliability and safety in life-saving operations.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+For support related to emergency response operations:
+- **Emergency Situations**: Contact local emergency services immediately
+- **Platform Issues**: Please open an issue in the repository with detailed reproduction steps
+- **Feature Requests**: Suggest enhancements that could improve emergency coordination
+- **Security Concerns**: Report vulnerabilities through our security contact procedures
+
+---
+*When disaster strikes, every second counts. The Rescue Platform helps emergency teams respond faster, coordinate better, and save more lives.*

@@ -5,14 +5,47 @@ import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Read from --dart-define-from-file (see env.json) — same values as the
+  // web app's dashboard/.env.local (NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY).
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    runApp(const _MissingEnvApp());
+    return;
+  }
+
   // Initialize Supabase
   await Supabase.initialize(
-    url: 'your_supabase_url_here',
-    anonKey: 'your_supabase_anon_key_here',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
-  
+
   runApp(const MyApp());
+}
+
+class _MissingEnvApp extends StatelessWidget {
+  const _MissingEnvApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Missing Supabase configuration.\n\n'
+              'Run the app with:\n'
+              'flutter run --dart-define-from-file=env.json',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {

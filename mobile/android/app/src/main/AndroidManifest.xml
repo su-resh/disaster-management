@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Location permissions required by the geolocator plugin -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Needed on Android 10+ when requesting background location; not required,
+         but keeps geolocator's service checks from failing on some OEMs -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <application
         android:label="mobile"
         android:name="${applicationName}"

@@ -9,79 +9,49 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController();
-  final _otpController = TextEditingController();
-  bool _isRequestingOTP = false;
-  bool _isVerifyingOTP = false;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
   String _errorMessage = '';
-  String _successMessage = '';
-  bool _showOTPField = false;
 
   @override
   void dispose() {
-    _phoneController.dispose();
-    _otpController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _requestOTP() async {
-    setState(() {
-      _isRequestingOTP = true;
-      _errorMessage = '';
-      _successMessage = '';
-    });
-    
-    try {
-      final response = await Supabase.instance.client.auth.signInWithOtp(
-        phone: _phoneController.text,
-      );
-      
-      if (response.error == null) {
-        setState(() {
-          _showOTPField = true;
-          _successMessage = 'OTP sent to your phone';
-        });
-      } else {
-        setState(() {
-          _errorMessage = response.error?.message ?? 'Failed to send OTP';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
-      setState(() => _isRequestingOTP = false);
-    }
-  }
+  Future<void> _signIn() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  Future<void> _verifyOTP() async {
     setState(() {
-      _isVerifyingOTP = true;
+      _isLoading = true;
       _errorMessage = '';
     });
-    
+
     try {
-      final response = await Supabase.instance.client.auth.verifyOtp(
-        phone: _phoneController.text,
-        token: _otpController.text,
-        type: OtpType.sms,
+      // In supabase_flutter 2.x, signInWithPassword throws on error.
+      // On success the AuthWrapper in main.dart detects the session change
+      // and redirects to home.
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
-      
-      if (response.error == null) {
-        // OTP verification successful - user is now signed in
-        // The AuthWrapper in main.dart will detect the session change and redirect to home
-      } else {
-        setState(() {
-          _errorMessage = response.error?.message ?? 'Failed to verify OTP';
-        });
-      }
-    } catch (e) {
+      // No navigation needed here: AuthWrapper listens to onAuthStateChange.
+    } on AuthException catch (e) {
+      if (!mounted) return;
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = e.message;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Unexpected error: $e';
       });
     } finally {
-      setState(() => _isVerifyingOTP = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -105,112 +75,102 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  _showOTPField ? 'Verify OTP' : 'Login with Phone',
+                const Text(
+                  'Login with Email',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     color: Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 32),
-                if (_successMessage.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      border: Border.all(color: Colors.green.shade200),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _successMessage,
-                      style: TextStyle(color: Colors.green.shade700),
-                    ),
-                  ),
-                if (_errorMessage.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      border: Border.all(color: Colors.red.shade200),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _errorMessage,
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
-                  ),
-                const SizedBox(height: 24),
-                if (!_showOTPField) ...[
-                  TextField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone Number',
-                      prefixText: '+977 ',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _isRequestingOTP ? null : _requestOTP,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _isRequestingOTP
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          final email = value?.trim() ?? '';
+                          if (email.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          final emailRegex =
+                              RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                          if (!emailRegex.hasMatch(email)) {
+                            return 'Please enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        autofillHints: const [AutofillHints.password],
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                             ),
-                          )
-                        : const Text('Send OTP'),
+                            onPressed: () {
+                              setState(
+                                  () => _obscurePassword = !_obscurePassword);
+                            },
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (_) => _isLoading ? null : _signIn(),
+                      ),
+                      const SizedBox(height: 8),
+                      if (_errorMessage.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            _errorMessage,
+                            style: const TextStyle(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _signIn,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Text('Login'),
+                      ),
+                    ],
                   ),
-                ] else ...[
-                  TextField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    decoration: const InputDecoration(
-                      labelText: 'OTP Code',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _isVerifyingOTP ? null : _verifyOTP,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _isVerifyingOTP
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text('Verify OTP'),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _showOTPField = false;
-                        _phoneController.clear();
-                        _otpController.clear();
-                        _errorMessage = '';
-                        _successMessage = '';
-                      });
-                    },
-                    child: const Text('Back to Enter Phone'),
-                  ),
-                ],
+                ),
                 const SizedBox(height: 24),
                 const Text(
                   'Don\'t have an account? Contact system administrator to create one.',

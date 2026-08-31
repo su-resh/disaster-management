@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7f9;
+  --foreground: #1f2937;
 }
 
 @theme inline {
+  /* Brand accent — desaturated rescue teal/slate (single accent color) */
+  --color-brand-50: #f3f7f8;
+  --color-brand-100: #e1ecef;
+  --color-brand-200: #c5d9de;
+  --color-brand-300: #9ebfc8;
+  --color-brand-400: #71a1ab;
+  --color-brand-500: #528691;
+  --color-brand-600: #3d6b76;
+  --color-brand-700: #35585f;
+  --color-brand-800: #2f4a50;
+  --color-brand-900: #2a3f44;
+  --color-brand-950: #16272b;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Data-heavy interfaces should use tabular figures so numbers align cleanly */
+@utility tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Consistent, tinted focus ring for interactive elements */
+@utility focus-brand {
+  @apply outline-none;
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--color-brand-200);
+    border-color: var(--color-brand-400);
+  }
 }
